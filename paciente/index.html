@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Medulares - Paciente</title>
+
+	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+	<script type="text/javascript" src="jquery/js/jquery-1.9.1.js"></script>
+	<script type="text/javascript" src="jquery/js/jquery-ui-1.9.2.custom.min.js"></script>
+	<script src="http://code.jquery.com/mobile/1.4.2/jquery.mobile-1.4.2.min.js"></script>
+	
+	<link rel="stylesheet" href="http://code.jquery.com/mobile/1.4.2/jquery.mobile.structure-1.4.2.min.css" />
+	<link rel="stylesheet" href="jquery/css-mobile/themes/mobile.min.css" />
+	<link rel="stylesheet" href="jquery/css-mobile/themes/jquery.mobile.icons.min.css" />
+	
+	<script type="text/javascript" src="../jquery/js/jquery.form.js"></script>
+	<!--<script type="text/javascript" src="jquery/js/jquery.maskedinput.js"></script>-->
+	<script src="jquery/js/jquery.animateSprite.min.js"></script>
+
+	<style type="text/css">
+		.face {
+			margin-top: -33px;
+			height: 81px;
+			width: 86px;
+			background-image: url(imagens/carinhas.jpg);
+		}
+		#box{
+    		color: #0000CD;
+    		margin-left: 10px;
+		}
+		span{
+			color: #0000CD;
+			font-family: arial;
+			font-size: small;
+			text-align: center;
+		}
+		#top{
+			background-color: #FFFFFF;
+			margin-top: 5px;
+			border-radius: -15px #FFFFFF;
+
+		}
+		
+	</style>
+	<script>
+		var cpf ="";
+		function mcpf(v){
+			if(v.length <= 14){
+				
+				v=v.replace(/\D/g,"")                    //Remove tudo o que não é dígito
+				v=v.replace(/(\d{3})(\d)/,"$1.$2")       //Coloca um ponto entre o terceiro e o quarto dígitos
+				v=v.replace(/(\d{3})(\d)/,"$1.$2")       //Coloca um ponto entre o terceiro e o quarto dígitos
+										 //de novo (para o segundo bloco de números)
+				v=v.replace(/(\d{3})(\d{1,2})$/,"$1-$2") //Coloca um hífen entre o terceiro e o quarto dígitos
+				cpf = v;
+				return v
+
+			}else{
+				return cpf;
+			}
+			
+		}
+				
+		function mascara(o,f){
+			v_obj=o
+			v_fun=f
+			setTimeout("execmascara()",1)
+		}
+
+		function execmascara(){
+			v_obj.value=v_fun(v_obj.value)
+		}
+
+		function data(){
+			var data = new Date();
+
+			var dia  = data.getDate();
+			if (dia< 10) {
+			    dia  = "0" + dia;
+			}
+
+			var mes  = data.getMonth() + 1;
+			if (mes < 10) {
+			    mes  = "0" + mes;
+			}
+
+			var ano  = data.getFullYear();
+			dataFormatada =  ano + "-" + mes + "-" +dia ;
+			return dataFormatada;
+		}
+
+		function revert(dat){
+			//2015-04-01
+			var dia = dat.substring(8,10);
+			var mes = dat.substring(5,7);
+			var ano = dat.substring(0,4);
+
+			var res = dia + "/" + mes + "/" + ano;
+			return res;
+
+		}
+
+	</script>
+	<script>
+		$(function(){
+			$(".face").animateSprite({
+				fps: 1,
+				animations: {
+					anim: [0]
+				},
+				loop: false,
+			});
+
+
+			$("#div-slider").change(function() {
+			  var slider_value = $("#slider1").val();
+			  $(".face").animateSprite('frame', slider_value);
+			});
+
+			$( "#ok" ).click(function() {
+				if(document.getElementById("cpf").value == ""){
+					alert("Digite seu cpf!");
+				}else{
+					$.ajax({
+						type: 'POST',
+						url: 'notifica.php',
+						data: {cpf:document.getElementById("cpf").value},
+						dataType: 'JSON',
+						success: function(retorno){
+							if(retorno == 1){
+								document.getElementById("box").innerHTML="Paciente não encontrado.";
+								document.getElementById("cpf").value ="";
+							}
+							else if(retorno == 2){
+								$.ajax({
+									type: 'POST',
+									url: 'nome.php',
+									data: {cpf:document.getElementById("cpf").value},
+									success: function(retorno){
+										document.getElementById("nome").value =retorno;
+										document.getElementById("box").innerHTML="Faça sua primeira avaliação!";
+
+									}
+								});
+							}
+							else{
+								var hoje = data();
+								var dados = JSON.parse(JSON.stringify(retorno));
+								var dat = revert(dados[0].data);
+								var nome = dados[0].nome;
+
+								if(dados[0].data == null || dados[0].data == "0000-00-00"){
+									document.getElementById("nome").value =dados[0].nome;
+									document.getElementById("box").innerHTML="Faça sua primeira avaliação!";
+								}
+								else if(hoje == dados[0].data ){
+									document.getElementById("nome").value =dados[0].nome;
+									document.getElementById("slider1").value= dados[0].dor;
+								 	$("#slider1").blur();
+								 	$(".face").animateSprite('frame', dados[0].dor);
+								 	document.getElementById("box").innerHTML="Última avaliação: " + dat;
+
+								}else{
+									$.ajax({
+										type: 'POST',
+										url: 'data.php',
+										data: {cpf:document.getElementById("cpf").value},
+										success: function(retorno){
+											if(retorno ==1){
+												alert(nome + " Por favor faça uma nova avaliação!");
+												document.getElementById("nome").value =dados[0].nome;
+												document.getElementById("box").innerHTML="Última avaliação: " + dat;
+											}else{
+												alert(retorno);
+												document.getElementById("cpf").value = "";
+												document.getElementById("nome").value ="";
+												document.getElementById("slider1").value= "";
+												 $("#slider1").blur();
+												 $(".face").animateSprite('frame', 0);
+											}
+											
+										}
+									});	
+									
+								}
+						   	
+							}
+								
+						}
+					});	
+					
+
+				}
+			});//fim .click
+
+			$( "#salvar" ).click(function() {
+				if(document.getElementById("cpf").value == ""){
+					alert("Digite seu cpf!");
+				}else{
+					$.ajax({
+						type: 'POST',
+						url: "paciente.php",
+						data: {cpf:document.getElementById("cpf").value, dor:document.getElementById("slider1").value},
+						success: function(html){
+							document.getElementById("box").innerHTML=html;
+							setTimeout(function(){ 
+								document.getElementById("cpf").value ="";
+								document.getElementById("slider1").value = 0;
+								document.getElementById("nome").value ="";
+								document.getElementById("box").innerHTML="";
+								$("#slider1").blur();
+								$(".face").animateSprite('frame', 0);
+							 }, 5000);
+							
+							
+
+						}
+					});
+				}
+  				
+			});
+
+		
+
+
+		});//fim fuction
+
+
+	</script>
+
+</head>
+<body>
+	<div data-role="page" data-theme="b">
+		<div id="top" align="center">
+			<img src="imagens/LOGO_MEDULARIS.bmp" width="200" height="60"/>
+		</div>
+		<div data-role="header" data-position="inline" height="20">
+			<h1>Informe os dados</h1>
+		</div>
+		
+		<div data-role="content" data-theme="a">
+			<!-- <p>Site Mobile</p> -->
+			<form id="dor" name="dor" method="post">
+				<div height="30">
+					<table>
+					<label for="cpf" >CPF:</label>
+						<tr>
+							<td width="100%"><input type="text" id="cpf" name="cpf" maxlength="14" title="Digite seu cpf e clique no OK" autocomplete="off" onKeyUp="mascara(this, mcpf)"/></td>
+							<td width="25%"><input type="button" value="OK" id="ok" name="ok" /></td>
+						</tr>
+						
+					</table>
+				</div>
+				<label for="nome" >Nome:</label>
+				<input type="text" id="nome" name="nome" readonly />
+				<br>
+				<br>
+				<div align="center">
+					<div id="face" class="face"></div>
+				</div>
+				<p align="center" id="text">  </p>
+				<br>
+				<div id="div-slider">
+					<label for="slider1"><span align="center">Arraste a barra para informar a dor.</span></label>
+					<input type="range" name="slider1" id="slider1" value="0" min="0" max="10" data-theme="b" readonly />
+					
+				</div>
+
+				<input type="button" value="Salvar" name="salvar" id="salvar"  />	
+
+					<p align="center" id="box">  </p>
+						
+			</form>
+		</div>
+	</div>
+</body>
+</html>

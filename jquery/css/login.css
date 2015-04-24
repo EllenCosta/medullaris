@@ -1,0 +1,7 @@
+body,input,select,td,textarea {
+    font-family: Verdana, Geneva, Arial, Helvetica, sans-serif;
+    font-size: 11px;    
+}
+table {
+	-- border: 1px solid #666;		
+}

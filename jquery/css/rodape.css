@@ -1,0 +1,20 @@
+html, body {height:100%;} 
+
+body {
+	margin:0; 
+	padding:0;		
+}
+
+#tudo { 	
+	position:relative;  /*Contexto de posicionamento */
+	margin:0 auto;	
+	min-height:100%;/**/		
+}
+
+#conteudo {padding-bottom:50px;}
+
+#topo {	
+	height:66px;		
+	padding-top:1px;
+}
+

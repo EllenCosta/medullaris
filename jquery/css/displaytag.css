@@ -1,0 +1,18 @@
+table {
+	border: 1px solid #666;	
+	margin: 0px 0 0px 0 !important;
+}
+
+th,td {
+	padding: 3px 2px 1px 5px !important;
+	--text-align: left;
+	vertical-align: center;
+}
+.tabela{
+	border: 1px solid #666;
+	margin: 4px 0 0px 0 !important;
+}
+
+.coluna{
+	padding: 4px 2px 4px 4px !important;
+}
